@@ -1,0 +1,75 @@
+import pandas as pd
+import numpy as np
+import matplotlib as plt
+import random
+from sklearn import model_selection
+import sklearn as sk
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error
+
+house_df=pd.read_csv(r"C:\Users\Daria\ml_zoomcamp2021\AB_NYC_2019.csv")
+df=house_df[['latitude','longitude','price','minimum_nights','number_of_reviews','reviews_per_month','calculated_host_listings_count','availability_365']]
+
+#Q1
+count_na_rw=df['reviews_per_month'].isna().sum()
+print(count_na_rw)
+
+#Q2
+
+min_night=df['minimum_nights'].median()
+print(min_night)
+
+df_shuffled=sk.utils.shuffle(df, random_state=42)
+
+X= df_shuffled[['latitude','longitude','minimum_nights','number_of_reviews','reviews_per_month','calculated_host_listings_count','availability_365']]
+Y=df_shuffled['price']
+
+X_train, X_test, y_train, y_test = sk.model_selection.train_test_split(X, Y, test_size=0.2, random_state=42)
+X_train, X_val, y_train, y_val = sk.model_selection.train_test_split(X_train, y_train, test_size=0.25,random_state=42)
+np_log = np.log1p(Y)
+
+#Q3
+
+df_zero_shuff=X
+df_zero_shuff['reviews_per_month']=X['reviews_per_month'].fillna(0)
+X_train_zero, X_test_zero, y_train_zero, y_test_zero = sk.model_selection.train_test_split(df_zero_shuff, Y, test_size=0.2, random_state=42)
+#X_train_zero, X_val_zero, y_train_zero, y_val_zero = sk.model_selection.train_test_split(X_train, y_train_zero, test_size=0.25, random_state=42)
+reg_zero = LinearRegression().fit(X_train_zero, y_train_zero)
+y_pred_zero=reg_zero.predict(X_test_zero)
+rms_zero = mean_squared_error(y_test_zero, y_pred_zero, squared=False)
+print(rms_zero)
+
+df_mean_shuff=X
+df_mean_shuff['reviews_per_month']=X['reviews_per_month'].fillna(X['reviews_per_month'].mean())
+X_train_mean, X_test_mean, y_train_mean, y_test_mean = sk.model_selection.train_test_split(df_mean_shuff, Y, test_size=0.2, random_state=42)
+#X_train_zero, X_val_zero, y_train_zero, y_val_zero = sk.model_selection.train_test_split(X_train, y_train_zero, test_size=0.25, random_state=42)
+reg_mean = LinearRegression().fit(X_train_mean, y_train_mean)
+y_pred_mean=reg_mean.predict(X_test_mean)
+rms_mean = mean_squared_error(y_test_mean, y_pred_mean, squared=False)
+print(rms_mean)
+
+#Q5
+
+lst=[]
+for i in [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]:
+    X_train, X_test, y_train, y_test = sk.model_selection.train_test_split(X, Y, test_size=0.2, random_state=i)
+    X_train, X_val, y_train, y_val = sk.model_selection.train_test_split(X_train, y_train, test_size=0.25,random_state=i)
+    X.fillna(0)
+    reg = LinearRegression().fit(X_train, y_train)
+    y_pred=reg_mean.predict(X_test)
+    rms = mean_squared_error(y_test, y_pred, squared=False)
+    print("For {} rms is {}".format(i,rms))
+    lst.append(rms)
+print(lst)
+df_lst=pd.DataFrame(lst)
+print(df_lst.std())
+
+#Q6
+
+X_train_9, X_test_9, y_train_9, y_test_9 = sk.model_selection.train_test_split(X, Y, test_size=0.2, random_state=9)
+X.fillna(0)
+regression = LinearRegression().fit(X_train_9, y_train_9)
+y_pred_9=reg_mean.predict(X_test_9) 
+score=sk.metrics.r2_score(y_test_9, y_pred_9)
+rms_9 = mean_squared_error(y_test_9, y_pred_9, squared=False)
+print(score, rms_9)
